@@ -1,40 +1,463 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Generator</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>Генератор Паролей</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .password-display {
+            position: relative;
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 18px;
+            letter-spacing: 1px;
+            word-break: break-all;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .options {
+            margin-bottom: 25px;
+        }
+        
+        .option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .option label {
+            font-size: 16px;
+            color: #555;
+        }
+        
+        .length-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .length-value {
+            width: 40px;
+            text-align: center;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-top: 10px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #4285f4;
+        }
+        
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #4285f4;
+        }
+        
+        .btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        
+        .btn:hover {
+            background-color: #3367d6;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            right: 10px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: #555;
+            padding: 5px;
+        }
+        
+        .copy-btn:hover {
+            color: #4285f4;
+        }
+        
+        .strength-meter {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .strength-meter-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 5px;
+            transition: width 0.3s, background-color 0.3s;
+        }
+        
+        .password-info {
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="text">Password generator</h1>
-
-        <div class="password-settings">
-            <label for="password-length">Password length:</label>
-            <input type="number" id="password-length" value="12" min="6" max="32">
-
-        <div class="checkboxes">
-            <label for="include-lowercase">Lowercase letters</ label>
-            <input type="checkbox" id="include-lowercase" checked>
-
-            <label for="include-uppercase">Uppercase letters</ label>
-            <input type="checkbox" id="include-uppercase" checked>
-
-            <label for="include-numbers">Numbers</label>
-            <input type="checkbox" id="include-numbers" checked>
-
-            <label for="include-special">Special characters</label>
-            <input type="checkbox" id="include-special" checked>
+        <h1>Генератор сложных паролей</h1>
+        
+        <div class="password-display" id="password-display">
+            Ваш пароль появится здесь
+            <button class="copy-btn" id="copy-btn" title="Копировать пароль">
+                📋
+            </button>
         </div>
-        <button id="generate-btn">Generate a password</button>
+        
+        <div class="strength-meter">
+            <div class="strength-meter-fill" id="strength-meter-fill"></div>
+        </div>
+        
+        <div class="options">
+            <div class="option">
+                <label for="length">Длина пароля:</label>
+                <div class="length-container">
+                    <input type="range" id="length" min="8" max="32" value="16">
+                    <span class="length-value" id="length-value">16</span>
+                </div>
+            </div>
+            
+            <div class="option">
+                <label for="uppercase">Включать заглавные буквы (A-Z)</label>
+                <input type="checkbox" id="uppercase" checked>
+            </div>
+            
+            <div class="option">
+                <label for="lowercase">Включать строчные буквы (a-z)</label>
+                <input type="checkbox" id="lowercase" checked>
+            </div>
+            
+            <div class="option">
+                <label for="numbers">Включать цифры (0-9)</label>
+                <input type="checkbox" id="numbers" checked>
+            </div>
+            
+            <div class="option">
+                <label for="symbols">Включать символы (!@#$%^&*)</label>
+                <input type="checkbox" id="symbols" checked>
+            </div>
+            
+            <div class="option">
+                <label for="exclude-similar">Исключить похожие символы (i, l, 1, L, o, 0, O)</label>
+                <input type="checkbox" id="exclude-similar">
+            </div>
+        </div>
+        
+        <button class="btn" id="generate-btn">Сгенерировать пароль</button>
+        <button class="btn" id="generate-memorable-btn" style="background-color: #34a853;">Сгенерировать запоминающийся пароль</button>
+        
+        <div class="password-info" id="password-info"></div>
     </div>
-    <div class="generated-password">
-        <input type="text" id="generated-password" readonly placeholder="Your password will be here">
-        <button id="copy-btn">Copy</button>
-    </div>
-</div>
-    <script src="scripts.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const lengthSlider = document.getElementById('length');
+            const lengthValue = document.getElementById('length-value');
+            const uppercaseCheckbox = document.getElementById('uppercase');
+            const lowercaseCheckbox = document.getElementById('lowercase');
+            const numbersCheckbox = document.getElementById('numbers');
+            const symbolsCheckbox = document.getElementById('symbols');
+            const excludeSimilarCheckbox = document.getElementById('exclude-similar');
+            const generateBtn = document.getElementById('generate-btn');
+            const generateMemorableBtn = document.getElementById('generate-memorable-btn');
+            const passwordDisplay = document.getElementById('password-display');
+            const copyBtn = document.getElementById('copy-btn');
+            const strengthMeterFill = document.getElementById('strength-meter-fill');
+            const passwordInfo = document.getElementById('password-info');
+
+            lengthSlider.addEventListener('input', function() {
+                lengthValue.textContent = lengthSlider.value;
+            });
+
+            generateBtn.addEventListener('click', function() {
+                const length = parseInt(lengthSlider.value);
+                const hasUppercase = uppercaseCheckbox.checked;
+                const hasLowercase = lowercaseCheckbox.checked;
+                const hasNumbers = numbersCheckbox.checked;
+                const hasSymbols = symbolsCheckbox.checked;
+                const excludeSimilar = excludeSimilarCheckbox.checked;
+  
+                if (!hasUppercase && !hasLowercase && !hasNumbers && !hasSymbols) {
+                    alert('Пожалуйста, выберите хотя бы один набор символов!');
+                    return;
+                }
+                
+                const password = generatePassword(length, hasUppercase, hasLowercase, hasNumbers, hasSymbols, excludeSimilar);
+                displayPassword(password);
+            });
+
+            generateMemorableBtn.addEventListener('click', function() {
+                const length = parseInt(lengthSlider.value);
+                const password = generateMemorablePassword(length);
+                displayPassword(password);
+            });
+
+            copyBtn.addEventListener('click', function() {
+                const password = passwordDisplay.textContent.trim();
+                if (password !== 'Ваш пароль появится здесь') {
+                    navigator.clipboard.writeText(password).then(function() {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '✓';
+                        setTimeout(function() {
+                            copyBtn.textContent = originalText;
+                        }, 1500);
+                    });
+                }
+            });
+
+            function generatePassword(length, hasUppercase, hasLowercase, hasNumbers, hasSymbols, excludeSimilar) {
+                let charset = '';
+                const uppercaseChars = excludeSimilar ? 'ABCDEFGHJKMNPQRSTUVWXYZ' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                const lowercaseChars = excludeSimilar ? 'abcdefghjkmnpqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz';
+                const numberChars = excludeSimilar ? '23456789' : '0123456789';
+                const symbolChars = '!@#$%^&*()_-+=<>?/{}[]|';
+                
+                if (hasUppercase) charset += uppercaseChars;
+                if (hasLowercase) charset += lowercaseChars;
+                if (hasNumbers) charset += numberChars;
+                if (hasSymbols) charset += symbolChars;
+                
+                let password = '';
+                let hasRequiredChars = false;
+                
+                while (!hasRequiredChars) {
+                    password = '';
+                    for (let i = 0; i < length; i++) {
+                        const randomIndex = Math.floor(Math.random() * charset.length);
+                        password += charset[randomIndex];
+                    }
+
+                    const containsUppercase = hasUppercase ? /[A-Z]/.test(password) : true;
+                    const containsLowercase = hasLowercase ? /[a-z]/.test(password) : true;
+                    const containsNumbers = hasNumbers ? /[0-9]/.test(password) : true;
+                    const containsSymbols = hasSymbols ? /[!@#$%^&*()_\-+=<>?/{}[\]|]/.test(password) : true;
+                    
+                    hasRequiredChars = containsUppercase && containsLowercase && containsNumbers && containsSymbols;
+                }
+                
+                return password;
+            }
+            
+            function generateMemorablePassword(targetLength) {
+                const words = [
+                    "table", "home", "cat", "light", "world", "hand", "water", "sleep", "way", "day",
+                    "snow", "forest", "hour", "bridge", "umbrella", "friend", "garden", "sound", "paper",
+                    "dream", "window", "door", "book", "song", "bird", "time", "sun", "earth", "sky"
+                ];
+                
+                const numbers = "123456789";
+                const symbols = "!@#$%^&*";
+                
+                let password = "";
+                let currentLength = 0;
+
+                while (currentLength < targetLength - 3) {
+                    const randomWord = words[Math.floor(Math.random() * words.length)];
+
+                    const capitalizedWord = randomWord.charAt(0).toUpperCase() + randomWord.slice(1);
+
+                    if (currentLength + capitalizedWord.length <= targetLength - 3) {
+                        password += capitalizedWord;
+                        currentLength += capitalizedWord.length;
+                    } else {
+                        break;
+                    }
+                }
+
+                const randomNumber = numbers.charAt(Math.floor(Math.random() * numbers.length));
+                password += randomNumber;
+                currentLength += 1;
+
+                const randomSymbol = symbols.charAt(Math.floor(Math.random() * symbols.length));
+                password += randomSymbol;
+                currentLength += 1;
+
+                while (currentLength < targetLength) {
+                    const randomDigit = numbers.charAt(Math.floor(Math.random() * numbers.length));
+                    password += randomDigit;
+                    currentLength += 1;
+                }
+                
+                return password;
+            }
+
+            function displayPassword(password) {
+                passwordDisplay.textContent = password;
+
+                const strength = calculatePasswordStrength(password);
+                updateStrengthMeter(strength);
+
+                const strengthText = getStrengthText(strength);
+                const crackTime = estimateCrackTime(password);
+                passwordInfo.innerHTML = `Надежность: <strong>${strengthText}</strong><br>Примерное время взлома: ${crackTime}`;
+            }
+
+            function calculatePasswordStrength(password) {
+                let strength = 0;
+        
+                strength += Math.min(40, password.length * 2);
+
+                const hasLowercase = /[a-z]/.test(password);
+                const hasUppercase = /[A-Z]/.test(password);
+                const hasNumbers = /[0-9]/.test(password);
+                const hasSymbols = /[^a-zA-Z0-9]/.test(password);
+                
+                if (hasLowercase) strength += 10;
+                if (hasUppercase) strength += 15;
+                if (hasNumbers) strength += 10;
+                if (hasSymbols) strength += 15;
+  
+                let typesCount = 0;
+                if (hasLowercase) typesCount++;
+                if (hasUppercase) typesCount++;
+                if (hasNumbers) typesCount++;
+                if (hasSymbols) typesCount++;
+                
+                strength += (typesCount - 1) * 3;
+
+                const repeats = password.match(/(.)\1+/g);
+                if (repeats) {
+                    strength -= repeats.length * 2;
+                }
+                
+                return Math.max(0, Math.min(100, strength));
+            }
+
+            function updateStrengthMeter(strength) {
+                strengthMeterFill.style.width = strength + '%';
+
+                if (strength < 30) {
+                    strengthMeterFill.style.backgroundColor = '#f44336'; 
+                } else if (strength < 60) {
+                    strengthMeterFill.style.backgroundColor = '#ff9800'; 
+                } else if (strength < 80) {
+                    strengthMeterFill.style.backgroundColor = '#ffc107'; 
+                } else {
+                    strengthMeterFill.style.backgroundColor = '#4caf50'; 
+                }
+            }
+
+            function getStrengthText(strength) {
+                if (strength < 30) return 'Очень слабый';
+                if (strength < 60) return 'Слабый';
+                if (strength < 80) return 'Хороший';
+                return 'Отличный';
+            }
+
+            function estimateCrackTime(password) {
+                const length = password.length;
+
+                let alphabetSize = 0;
+                if (/[a-z]/.test(password)) alphabetSize += 26;
+                if (/[A-Z]/.test(password)) alphabetSize += 26;
+                if (/[0-9]/.test(password)) alphabetSize += 10;
+                if (/[^a-zA-Z0-9]/.test(password)) alphabetSize += 33;
+
+                const attemptsPerSecond = 10000000000; 
+ 
+                const possibilities = Math.pow(alphabetSize, length);
+                
+                const seconds = possibilities / (2 * attemptsPerSecond); 
+                
+                if (seconds < 60) {
+                    return 'меньше минуты';
+                } else if (seconds < 3600) {
+                    return Math.ceil(seconds / 60) + ' минут';
+                } else if (seconds < 86400) {
+                    return Math.ceil(seconds / 3600) + ' часов';
+                } else if (seconds < 31536000) {
+                    return Math.ceil(seconds / 86400) + ' дней';
+                } else if (seconds < 31536000 * 100) {
+                    return Math.ceil(seconds / 31536000) + ' лет';
+                } else if (seconds < 31536000 * 1000) {
+                    return 'сотни лет';
+                } else if (seconds < 31536000 * 1000000) {
+                    return 'тысячи лет';
+                } else {
+                    return 'миллионы лет';
+                }
+            }
+            
+            generateBtn.click();
+        });
+    </script>
 </body>
 </html>
